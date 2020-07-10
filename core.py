@@ -49,18 +49,18 @@ class CustomNode(object):
             weakly_nodes_list.sort(key=lambda x: len(x), reverse=True)
             for weakly_nodes in weakly_nodes_list:
                 g = self._data.subgraph(weakly_nodes)
-                child = CustomNode(g, 'w', 'Weakly component')
+                child = CustomNode(g, 'w', f'Weakly component {self.childCount() + 1}')
                 child._parent = self
-                child._row - len(self._children)
+                child._row - self.childCount()
                 self._children.append(child)
         elif tstr == 'w':
             strongly_nodes_list = list(filter(lambda x: len(x) > 1,
                                               nx.strongly_connected_components(self._data)))
             for strongly_nodes in strongly_nodes_list:
                 g = self._data.subgraph(strongly_nodes)
-                child = CustomNode(g, 's', 'Strongly component')
+                child = CustomNode(g, 's', f'Strongly component {self.childCount() + 1}')
                 child._parent = self
-                child._row = len(self._children)
+                child._row = self.childCount()
                 self._children.append(child)
 
         elif tstr == 's':
