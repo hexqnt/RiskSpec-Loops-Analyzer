@@ -8,18 +8,20 @@ import matplotlib.pyplot as plt
 from platform import python_version
 import gui
 
-
 from itertools import count
+
 iid = count()
 
+
 def rem(G):
-    for i in range(1,3):
+    for i in range(1, 3):
         for node in list(G.nodes):
             if G.in_degree(node) == G.out_degree(node) == 1:
                 edges = list(nx.all_neighbors(G, node))
                 G.add_edge(edges[0], edges[1])
                 G.remove_node(node)
     return G
+
 
 def graph_plot(g):
     plt.figure(next(iid))
@@ -28,13 +30,12 @@ def graph_plot(g):
     plt.show()
 
 
-
-
 class CustomNode(object):
 
-    def __init__(self, data, tstr):
+    def __init__(self, data, tstr, text='Unnmaed graph'):
         self._data = data
         self._tstr = tstr
+        self._text = text
         if type(data) == tuple:
             self._data = list(data)
         if type(data) is str or not hasattr(data, '__getitem__'):
@@ -42,29 +43,29 @@ class CustomNode(object):
 
         self._children = []
 
-        if tstr== 'g':
-            weakly_nodes_list = list(filter(lambda x: len(x)>1,
+        if tstr == 'g':
+            weakly_nodes_list = list(filter(lambda x: len(x) > 1,
                                             nx.weakly_connected_components(self._data)))
             weakly_nodes_list.sort(key=lambda x: len(x), reverse=True)
             for weakly_nodes in weakly_nodes_list:
                 g = self._data.subgraph(weakly_nodes)
-                child = CustomNode(g, 'w')
-                child._parent=self
+                child = CustomNode(g, 'w', 'Weakly component')
+                child._parent = self
+                child._row - len(self._children)
                 self._children.append(child)
         elif tstr == 'w':
-            strongly_nodes_list = list(filter(lambda x: len(x)>1,
+            strongly_nodes_list = list(filter(lambda x: len(x) > 1,
                                               nx.strongly_connected_components(self._data)))
             for strongly_nodes in strongly_nodes_list:
-                g =  self._data.subgraph(strongly_nodes)
-                child = CustomNode(g, 's')
+                g = self._data.subgraph(strongly_nodes)
+                child = CustomNode(g, 's', 'Strongly component')
                 child._parent = self
                 child._row = len(self._children)
                 self._children.append(child)
 
         elif tstr == 's':
             print('s')
-            #print(list(nx.simple_cycles(data)))
-
+            # print(list(nx.simple_cycles(data)))
 
         self._columncount = 2
         self._parent = None
@@ -73,9 +74,9 @@ class CustomNode(object):
     def data(self, column):
 
         if column == 0:
-            return self._tstr
+            return self._text
         elif column == 1:
-            return  len(self._data.nodes)
+            return len(self._data.nodes)
 
     def columnCount(self):
         return self._columncount
@@ -94,21 +95,27 @@ class CustomNode(object):
         return self._row
 
     def plot(self):
-       graph_plot(self._data)
+        graph_plot(self._data)
 
     def pcplot(self):
         g = rem(self._data.copy())
         graph_plot(g)
 
+    def simple_cycles(self):
+        cycles = nx.simple_cycles(self._data)
+        for i, cycle in enumerate(cycles):
+            print(cycle)
+            if i > 1000: break
 
 
 def load_graph():
     feft = pd.read_csv('../drawloops/data/FE2FT.csv', sep='\t', header=0)
-    feft.rename(columns={'FE':'FT1', 'FT':'FT2'}, inplace=True)
+    feft.rename(columns={'FE': 'FT1', 'FT': 'FT2'}, inplace=True)
     ftft = pd.read_csv('../drawloops/data/FT2FT.csv', sep='\t', header=0)
     df = pd.concat([feft, ftft])
     G = nx.from_pandas_edgelist(df=df, source='FT1', target='FT2', create_using=nx.DiGraph())
-    return  G
+    return G
+
 
 def main():
     print('RiskSpec Loops Analyzer\n',
@@ -124,6 +131,7 @@ def main():
     window = gui.MainWindow(node)
     window.show()
     sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     main()

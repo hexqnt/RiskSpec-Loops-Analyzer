@@ -52,22 +52,21 @@ class CustomModel(QAbstractItemModel):
         return None
 
 
-
 def ff():
     print('FF')
     return
 
+
 class MainWindow(QMainWindow):
     def __init__(self, node):
         super().__init__()
-        self.initUI( node)
+        self.initUI(node)
 
     def initUI(self, node):
-
         self.setWindowTitle('RiskSpec Loops Analyzer')
         self.statusBar().showMessage('Ready')
 
-        openAction = QAction( '&Open', self)
+        openAction = QAction('&Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open graph data')
 
@@ -87,8 +86,9 @@ class MainWindow(QMainWindow):
         self.treeView.customContextMenuRequested.connect(self.openMenu)
         self.treeView.setModel(CustomModel(node))
 
-    def openMenu(self, position):
+        self.treeView.setColumnWidth(0, 150)
 
+    def openMenu(self, position):
         index = self.treeView.indexAt(position)
         if not index.isValid():
             return
@@ -101,8 +101,13 @@ class MainWindow(QMainWindow):
         pcPlotAction.setStatusTip('Plot graph in Matplotlib with path contraction')
         pcPlotAction.triggered.connect(index.internalPointer().pcplot)
 
+        simpleCuclesAction = QAction('Simple cycles', self)
+        simpleCuclesAction.setStatusTip('Print simple cycles of graph')
+        simpleCuclesAction.triggered.connect(index.internalPointer().simple_cycles)
+
         menu = QMenu()
         menu.addAction(plotAction)
         menu.addAction(pcPlotAction)
+        menu.addAction(simpleCuclesAction)
 
         menu.exec_(self.treeView.viewport().mapToGlobal(position))
