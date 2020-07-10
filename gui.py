@@ -1,13 +1,14 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QAction, QMenu, qApp
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt5.Qt import PYQT_VERSION_STR
-from typing import Any
+from PyQt5.Qt import PYQT_VERSION_STR, QColor
+import typing
 
 
 class CustomModel(QAbstractItemModel):
     def __init__(self, node):
         QAbstractItemModel.__init__(self)
         self._root = node
+        self._header = ["Graph name", 'Nodes count']
         print('CustomModel init')
 
     def rowCount(self, parent: QModelIndex = ...) -> int:
@@ -43,7 +44,7 @@ class CustomModel(QAbstractItemModel):
                 return QAbstractItemModel.createIndex(self, p.row(), 0, p)
         return QModelIndex()
 
-    def data(self, index: QModelIndex, role: int = ...) -> Any:
+    def data(self, index: QModelIndex, role: int = ...) -> typing.Any:
         if not index.isValid():
             return None
         node = index.internalPointer()
@@ -51,10 +52,12 @@ class CustomModel(QAbstractItemModel):
             return node.data(index.column())
         return None
 
-
-def ff():
-    print('FF')
-    return
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> typing.Any:
+        if orientation == Qt.Horizontal and \
+                role == Qt.DisplayRole and \
+                section <= len(self._header):
+            return self._header[section]
+        return None
 
 
 class MainWindow(QMainWindow):
@@ -86,7 +89,7 @@ class MainWindow(QMainWindow):
         self.treeView.customContextMenuRequested.connect(self.openMenu)
         self.treeView.setModel(CustomModel(node))
 
-        self.treeView.setColumnWidth(0, 150)
+        self.treeView.setAlternatingRowColors(True)
 
     def openMenu(self, position):
         index = self.treeView.indexAt(position)
