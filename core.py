@@ -10,9 +10,10 @@ import gui
 
 from itertools import count
 
+# Graph numbering counter for plotting
 iid = count()
 
-
+# Removing nodes for path contraction
 def rem(G):
     for i in range(1, 3):
         for node in list(G.nodes):

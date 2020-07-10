@@ -47,10 +47,31 @@ class CustomModel(QAbstractItemModel):
     def data(self, index: QModelIndex, role: int = ...) -> typing.Any:
         if not index.isValid():
             return None
-        node = index.internalPointer()
         if role == Qt.DisplayRole:
+            node = index.internalPointer()
             return node.data(index.column())
+        if role == Qt.EditRole:
+            node = index.internalPointer()
+            return node
+
         return None
+
+    def setData(self, index: QModelIndex, value: typing.Any, role: int = ...) -> bool:
+        node = index.internalPointer()
+        node._text = value
+        return True
+
+    # Indicate how we can interact with the relevant elements
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        if not  index.isValid():
+            return Qt.ItemFlags()
+        # Standard interaction type
+        flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+        # Allow renaming of the graph
+        if index.column() == 0:
+            flags = flags | Qt.ItemIsEditable
+        return flags
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> typing.Any:
         if orientation == Qt.Horizontal and \
