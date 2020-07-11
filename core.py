@@ -49,64 +49,22 @@ class CustomNode(object):
             self._data = [data]
 
         self._children = []
-
-        if tstr == 'g':
-            weakly_nodes_list = list(filter(lambda x: len(x) > 1,
-                                            nx.weakly_connected_components(self._data)))
-            weakly_nodes_list.sort(key=lambda x: len(x), reverse=True)
-            for weakly_nodes in weakly_nodes_list:
-                g = self._data.subgraph(weakly_nodes)
-                child = CustomNode(g, 'w', f'Weakly component {self.childCount() + 1}')
-                child._parent = self
-                child._row - self.childCount()
-                self._children.append(child)
-        elif tstr == 'w':
-            strongly_nodes_list = list(filter(lambda x: len(x) > 1,
-                                              nx.strongly_connected_components(self._data)))
-            for strongly_nodes in strongly_nodes_list:
-
-                #g = self._data.subgraph(strongly_nodes)
-
-                # Set of nodes from which there is an entrance to the subgraph
-                outin_nodes = set()
-                edges = self._data.in_edges(strongly_nodes)
-                for e in edges:
-                    source, targer = e
-                    outin_nodes.add(source)
-
-                strongly_nodes_with_entrance = outin_nodes
-                entrance_nodes = outin_nodes.difference(strongly_nodes)
-
-
-                g = self._data.subgraph(strongly_nodes_with_entrance)
-                m = g.copy()
-                betwen_edges = g.in_edges(entrance_nodes)
-                m.remove_edges_from(betwen_edges)
-                g = m
-                # The color indicating attribute is used when rendering a graph
-                nx.set_node_attributes(g, 2, 'color')
-                for n in entrance_nodes:
-                    a =g.nodes.get(n, None)
-                    if a:
-                        a['color'] = 1
-
-                child = CustomNode(g, 's', f'Strongly component {self.childCount() + 1}')
-                child._parent = self
-                child._row = self.childCount()
-                self._children.append(child)
-
-        elif tstr == 's':
-            g = rem(self._data.copy())
-            child = CustomNode(g, 't', f'Struct component {self.childCount() + 1}')
-            child._parent = self
-            child._row - self.childCount()
-            self._children.append(child)
-
-        # print(list(nx.simple_cycles(data)))
+        self.initChild()
 
         self._columncount = 2
         self._parent = None
         self._row = 0
+
+    def initChild(self):
+        weakly_nodes_list = list(filter(lambda x: len(x) > 1,
+                                        nx.weakly_connected_components(self._data)))
+        weakly_nodes_list.sort(key=lambda x: len(x), reverse=True)
+        for weakly_nodes in weakly_nodes_list:
+            g = self._data.subgraph(weakly_nodes)
+            child = WeaklyNode(g, 'w', f'Weakly component {self.childCount() + 1}')
+            child._parent = self
+            child._row - self.childCount()
+            self._children.append(child)
 
     def data(self, column):
 
@@ -132,7 +90,7 @@ class CustomNode(object):
         return self._row
 
     def plot(self):
-        graph_plot(self._data, cmap=plt.cm.Set1)
+        graph_plot(self._data)
 
     def pcplot(self):
         g = rem(self._data.copy())
@@ -143,6 +101,56 @@ class CustomNode(object):
         for i, cycle in enumerate(cycles):
             print(cycle)
             if i > 1000: break
+
+class WeaklyNode(CustomNode):
+
+    def initChild(self):
+        strongly_nodes_list = list(filter(lambda x: len(x) > 1,
+                                          nx.strongly_connected_components(self._data)))
+        for strongly_nodes in strongly_nodes_list:
+
+            #g = self._data.subgraph(strongly_nodes)
+
+            # Set of nodes from which there is an entrance to the subgraph
+            outin_nodes = set()
+            edges = self._data.in_edges(strongly_nodes)
+            for e in edges:
+                source, targer = e
+                outin_nodes.add(source)
+
+            strongly_nodes_with_entrance = outin_nodes
+            entrance_nodes = outin_nodes.difference(strongly_nodes)
+
+            g = self._data.subgraph(strongly_nodes_with_entrance)
+            m = g.copy()
+            betwen_edges = g.in_edges(entrance_nodes)
+            m.remove_edges_from(betwen_edges)
+            g = m
+            # The color indicating attribute is used when rendering a graph
+            nx.set_node_attributes(g, 2, 'color')
+            for n in entrance_nodes:
+                a =g.nodes.get(n, None)
+                if a:
+                    a['color'] = 1
+
+            child = StronglyNode(g, 's', f'Strongly component {self.childCount() + 1}')
+            child._parent = self
+            child._row = self.childCount()
+            self._children.append(child)
+
+class StronglyNode(CustomNode):
+
+    def initChild(self):
+        #g = rem(self._data.copy())
+        #child = CustomNode(g, 't', f'Struct component {self.childCount() + 1}')
+        #child._parent = self
+        #child._row - self.childCount()
+        #self._children.append(child)
+        print('dd')
+
+    def plot(self):
+        graph_plot(self._data, cmap=plt.cm.Set1)
+
 
 
 def load_graph():
