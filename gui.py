@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QAction, QMenu, qApp
+from PyQt5 import uic
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QAction, QMenu, qApp, QFileDialog, QWidget,\
+    QComboBox, QDialog, QLabel, QDesktopWidget
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt5.Qt import PYQT_VERSION_STR, QColor
 import typing
@@ -63,7 +65,7 @@ class CustomModel(QAbstractItemModel):
 
     # Indicate how we can interact with the relevant elements
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        if not  index.isValid():
+        if not index.isValid():
             return Qt.ItemFlags()
         # Standard interaction type
         flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled
@@ -84,33 +86,18 @@ class CustomModel(QAbstractItemModel):
 class MainWindow(QMainWindow):
     def __init__(self, node):
         super().__init__()
+        uic.loadUi('ui/mainwindow.ui', self) # Load the .ui file
+        #self.show() # Show the GUI
         self.initUI(node)
 
     def initUI(self, node):
-        self.setWindowTitle('RiskSpec Loops Analyzer')
-        self.statusBar().showMessage('Ready')
 
-        openAction = QAction('&Open', self)
-        openAction.setShortcut('Ctrl+O')
-        openAction.setStatusTip('Open graph data')
+        self.actionOpen.triggered.connect(self.openModelDialog)
+        self.actionExit.triggered.connect(qApp.quit)
 
-        exitAction = QAction('&Exit', self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(qApp.quit)
-
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(openAction)
-        fileMenu.addAction(exitAction)
-
-        self.treeView = QTreeView()
-        self.setCentralWidget(self.treeView)
-        self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView.customContextMenuRequested.connect(self.openMenu)
         self.treeView.setModel(CustomModel(node))
 
-        self.treeView.setAlternatingRowColors(True)
 
     def openMenu(self, position):
         index = self.treeView.indexAt(position)
@@ -135,3 +122,66 @@ class MainWindow(QMainWindow):
         menu.addAction(simpleCuclesAction)
 
         menu.exec_(self.treeView.viewport().mapToGlobal(position))
+
+    def openModelDialog(self):
+        e = OpenModelDialog(self)
+        e.exec_()
+        #self.geometry().center()
+
+
+class OpenModelDialog(QDialog):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        uic.loadUi('ui/openmodeldialog.ui', self) # Load the .ui file
+        self.initUI()
+
+    def initUI(self):
+        qr = self.frameGeometry()
+        cp = self.parent().geometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+        self.updateModelList.clicked.connect(self.getAvalibleModels)
+
+    def getAvalibleModels(self):
+
+        import sys
+        dbname='master'
+        ip ='127.0.0.1'
+        port = 1433
+        uid = self.uid.text
+        pwd = self.pwd.text
+        serverName = self.serverName.currentText
+
+        # Создаем строку подключенрия со спец. символами
+        if sys.platform == 'linux':
+            # Удалённое подключение для Linux через FreeTDS и unixODBC
+            params = f'DRIVER=FreeTDS;SERVER={ip};PORT={port};DATABASE={dbname};UID={uid};Pwd={pwd};TDS_Version=8.0;'
+
+        elif sys.platform == 'win32':
+            # Локальное подключение для Windows со стандартным драйвером
+            params = f'DRIVER={{SQL Server Native Client 11.0}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
+        else:
+            return None
+
+        import pydoc
+        with pyodbc.connect(params) as cnxn:
+            with cnxn.cursor() as cursor:
+                cursor.execute("SELECT name FROM master.dbo.sysdatabases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb')")
+                rows = cursor.fetchall()
+                if len(rows)==0:
+                    sys.exit("Нет активных моделей!")
+                    return None
+
+                self.models.addItems(rows)
+
+    def connetionString(self):
+
+        return 'Constr'
+
+
+
+
+
+

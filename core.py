@@ -13,6 +13,7 @@ from itertools import count
 # Graph numbering counter for plotting
 iid = count()
 
+
 # Removing nodes for path contraction
 def rem(G):
     for i in range(1, 3):
@@ -24,14 +25,14 @@ def rem(G):
     return G
 
 
-def graph_plot(g, cmap = False):
+def graph_plot(g, cmap=False):
     plt.figure(next(iid))
     pos = nx.spring_layout(g, k=0.5)
     if cmap:
         cn = [g.nodes[n]['color'] for n in g.nodes]
-        #cn = nx.get_node_attributes(g, 'color')
+        # cn = nx.get_node_attributes(g, 'color')
         print(cn)
-        nx.draw(g, pos=pos, alpha=0.6, with_labels=True, node_color = cn, cmap=cmap)
+        nx.draw(g, pos=pos, alpha=0.6, with_labels=True, node_color=cn, cmap=cmap)
     else:
         nx.draw(g, pos=pos, alpha=0.6, with_labels=True)
     plt.show()
@@ -43,10 +44,6 @@ class CustomNode(object):
         self._data = data
         self._tstr = tstr
         self._text = text
-        if type(data) == tuple:
-            self._data = list(data)
-        if type(data) is str or not hasattr(data, '__getitem__'):
-            self._data = [data]
 
         self._children = []
         self.initChild()
@@ -80,7 +77,7 @@ class CustomNode(object):
         return len(self._children)
 
     def child(self, row):
-        if row >= 0 and row < self.childCount():
+        if 0 <= row < self.childCount():
             return self._children[row]
 
     def parent(self):
@@ -97,10 +94,14 @@ class CustomNode(object):
         graph_plot(g)
 
     def simple_cycles(self):
-        cycles = nx.simple_cycles(self._data)
-        for i, cycle in enumerate(cycles):
-            print(cycle)
-            if i > 1000: break
+        saveFile, filter = gui.QFileDialog.getSaveFileName(caption="Specify a file to save loops", filter="Text files (*.txt);;All files (*.*)")
+        if saveFile:
+            with open(f'{saveFile}.txt', 'w') as file:
+                cycles = nx.simple_cycles(self._data)
+                for i, cycle in enumerate(cycles, start=1):
+                    str = '\t'.join(cycle)
+                    file.write(f'{i}\t{str}\n')
+
 
 class WeaklyNode(CustomNode):
 
@@ -109,7 +110,7 @@ class WeaklyNode(CustomNode):
                                           nx.strongly_connected_components(self._data)))
         for strongly_nodes in strongly_nodes_list:
 
-            #g = self._data.subgraph(strongly_nodes)
+            # g = self._data.subgraph(strongly_nodes)
 
             # Set of nodes from which there is an entrance to the subgraph
             outin_nodes = set()
@@ -129,7 +130,7 @@ class WeaklyNode(CustomNode):
             # The color indicating attribute is used when rendering a graph
             nx.set_node_attributes(g, 2, 'color')
             for n in entrance_nodes:
-                a =g.nodes.get(n, None)
+                a = g.nodes.get(n, None)
                 if a:
                     a['color'] = 1
 
@@ -138,19 +139,19 @@ class WeaklyNode(CustomNode):
             child._row = self.childCount()
             self._children.append(child)
 
+
 class StronglyNode(CustomNode):
 
     def initChild(self):
-        #g = rem(self._data.copy())
-        #child = CustomNode(g, 't', f'Struct component {self.childCount() + 1}')
-        #child._parent = self
-        #child._row - self.childCount()
-        #self._children.append(child)
-        print('dd')
+        # g = rem(self._data.copy())
+        # child = CustomNode(g, 't', f'Struct component {self.childCount() + 1}')
+        # child._parent = self
+        # child._row - self.childCount()
+        # self._children.append(child)
+        print('Strongly Node (init child)')
 
     def plot(self):
-        graph_plot(self._data, cmap=plt.cm.Set1)
-
+        graph_plot(self._data, cmap=plt.cm.get_cmap('Set1'))
 
 
 def load_graph():
