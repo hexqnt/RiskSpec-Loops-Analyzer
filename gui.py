@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QAction, QMenu
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt5.Qt import PYQT_VERSION_STR, QColor
 import typing
+import sys
 
 
 class CustomModel(QAbstractItemModel):
@@ -145,14 +146,12 @@ class OpenModelDialog(QDialog):
         self.updateModelList.clicked.connect(self.getAvalibleModels)
 
     def getAvalibleModels(self):
-
-        import sys
-        dbname='master'
+        dbname = 'master'
         ip ='127.0.0.1'
         port = 1433
-        uid = self.uid.text
-        pwd = self.pwd.text
-        serverName = self.serverName.currentText
+        uid = self.uid.text()
+        pwd = self.pwd.text()
+        serverName = self.serverName.currentText()
 
         # Создаем строку подключенрия со спец. символами
         if sys.platform == 'linux':
@@ -161,11 +160,11 @@ class OpenModelDialog(QDialog):
 
         elif sys.platform == 'win32':
             # Локальное подключение для Windows со стандартным драйвером
-            params = f'DRIVER={{SQL Server Native Client 11.0}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
+            params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
         else:
             return None
 
-        import pydoc
+        import pyodbc
         with pyodbc.connect(params) as cnxn:
             with cnxn.cursor() as cursor:
                 cursor.execute("SELECT name FROM master.dbo.sysdatabases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb')")
@@ -174,11 +173,21 @@ class OpenModelDialog(QDialog):
                     sys.exit("Нет активных моделей!")
                     return None
 
-                self.models.addItems(rows)
+                a = [r[0] for r in rows]
+                self.models.addItems(a)
 
     def connetionString(self):
+        if sys.platform == 'linux':
+            # Удалённое подключение для Linux через FreeTDS и unixODBC
+            params = f'DRIVER=FreeTDS;SERVER={ip};PORT={port};DATABASE={dbname};UID={uid};Pwd={pwd};TDS_Version=8.0;'
 
-        return 'Constr'
+        elif sys.platform == 'win32':
+            # Локальное подключение для Windows со стандартным драйвером
+            params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
+        else:
+            return None
+
+        return params
 
 
 

@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>381</width>
+    <width>389</width>
     <height>294</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>389</width>
+    <height>294</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>294</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Connect to RiskSpectrum DB model</string>
@@ -138,9 +150,12 @@
         <property name="editable">
          <bool>true</bool>
         </property>
+        <property name="currentText">
+         <string>.\RISKSPEC_PSA2012</string>
+        </property>
         <item>
          <property name="text">
-          <string>RISKSPEC_PSA2012</string>
+          <string>.\RISKSPEC_PSA2012</string>
          </property>
         </item>
        </widget>
