@@ -103,6 +103,7 @@ class CustomNode(object):
                     file.write(f'{i}\t{str}\n')
 
 
+
 class WeaklyNode(CustomNode):
 
     def initChild(self):
@@ -154,6 +155,38 @@ class StronglyNode(CustomNode):
         graph_plot(self._data, cmap=plt.cm.get_cmap('Set1'))
 
 
+    def test(self, g, cnodes, dn, test_edges):
+        accepted_edges = []
+        for edge in test_edges:
+            g.remove_edge(edge[0], edge[1])
+
+            test = True
+            for node in cnodes:
+                d = nx.algorithms.descendants(g, node)
+                test = dn == set(d)
+                if not test:
+                    break
+            if test:
+                #print(f'accept edge {edge}')
+                accepted_edges.append(edge)
+
+
+            g.add_edge(edge[0], edge[1])
+
+        return  accepted_edges
+
+
+    def av(self):
+        g = self._data
+        cnodes= [x for x,y in g.nodes(data=True) if y['color']==1]
+        dnodes= [x for x,y in g.nodes(data=True) if y['color']==2]
+        dn = set(dnodes)
+        #print(f'{cnodes}\n{dnodes}')
+        edges = list(g.edges())
+        print(self.test(g,cnodes,dn,edges))
+
+
+
 def load_graph():
     feft = pd.read_csv('../drawloops/data/FE2FT.csv', sep='\t', header=0)
     feft.rename(columns={'FE': 'FT1', 'FT': 'FT2'}, inplace=True)
@@ -169,7 +202,7 @@ def main():
           f'Pandas {pd.__version__}\n',
           f'NetworkX {nx.__version__}\n',
           f'PyQt {gui.PYQT_VERSION_STR}')
-
+    gui.sql.init_sql_queries()
     G = load_graph()
     node = CustomNode(G, 'g')
 
