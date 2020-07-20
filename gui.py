@@ -12,7 +12,7 @@ class CustomModel(QAbstractItemModel):
     def __init__(self, node):
         QAbstractItemModel.__init__(self)
         self._root = node
-        self._header = ["Graph name", 'Nodes count']
+        self._header = ["Graph name", 'Nodes count', 'Loops count']
         print('CustomModel init')
 
     def rowCount(self, parent: QModelIndex = ...) -> int:

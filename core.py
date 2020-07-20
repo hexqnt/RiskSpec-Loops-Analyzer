@@ -9,7 +9,7 @@ from platform import python_version
 import gui
 
 from itertools import count
-
+import defines
 # Graph numbering counter for plotting
 iid = count()
 
@@ -48,7 +48,7 @@ class CustomNode(object):
         self._children = []
         self.initChild()
 
-        self._columncount = 2
+        self._columncount = 3
         self._parent = None
         self._row = 0
 
@@ -69,6 +69,8 @@ class CustomNode(object):
             return self._text
         elif column == 1:
             return len(self._data.nodes)
+        elif column ==2:
+            return self.loops_count()
 
     def columnCount(self):
         return self._columncount
@@ -101,6 +103,11 @@ class CustomNode(object):
                 for i, cycle in enumerate(cycles, start=1):
                     str = '\t'.join(cycle)
                     file.write(f'{i}\t{str}\n')
+
+    def loops_count(self):
+        if len(self._data.nodes) > defines.max_node_loops_calc:
+            return None
+        return len(list(nx.simple_cycles(self._data)))
 
 
 
@@ -155,35 +162,76 @@ class StronglyNode(CustomNode):
         graph_plot(self._data, cmap=plt.cm.get_cmap('Set1'))
 
 
-    def test(self, g, cnodes, dn, test_edges):
+    def test(self, g, cnodes, dn, test_edges, rem_edge=None):
         accepted_edges = []
+        import time
+        print(time.time(), '\t', 'start')
         for edge in test_edges:
+
             g.remove_edge(edge[0], edge[1])
 
             test = True
             for node in cnodes:
                 d = nx.algorithms.descendants(g, node)
-                test = dn == set(d)
+
+                test = dn == d
                 if not test:
                     break
+            print(time.time(), '\t', 'desc')
             if test:
-                #print(f'accept edge {edge}')
-                accepted_edges.append(edge)
 
+                print(time.time(), '\t', 'cycles')
+                cycles_count = len(list(nx.simple_cycles(g)))
+                accepted_edges.append(edge)
+                print(edge)
 
             g.add_edge(edge[0], edge[1])
+
+
+        #for edge in accepted_edges:
+            #g.remove_edge(edge[0], edge[1])
+            #a = list(filter(lambda x: x!=edge,accepted_edges))
+            #self.test(g,cnodes,dn,a,edge)
+            #g.add_edge(edge[0], edge[1])
+
 
         return  accepted_edges
 
 
     def av(self):
+        result = []
         g = self._data
-        cnodes= [x for x,y in g.nodes(data=True) if y['color']==1]
+        orange_nodes = [x for x,y in g.nodes(data=True) if y['color']==1]
         dnodes= [x for x,y in g.nodes(data=True) if y['color']==2]
-        dn = set(dnodes)
+        blue_nodes = set(dnodes)
         #print(f'{cnodes}\n{dnodes}')
         edges = list(g.edges())
-        print(self.test(g,cnodes,dn,edges))
+        edges = self.test(g,orange_nodes,blue_nodes,edges)
+
+        import time
+        from itertools import combinations
+
+        for level in range(2, len(edges)):
+            stop = True
+            edges2 = combinations(edges,level)
+            for i, e in enumerate(edges2):
+                g.remove_edges_from(e)
+
+                test = True
+                for node in orange_nodes:
+                    d = nx.algorithms.descendants(g, node)
+                    test = blue_nodes == d
+                    if not test:
+                        break
+                if test:
+                    stop = False
+                    cycles_count = len(list(nx.simple_cycles(g)))
+                    print(f'{i}\t{level}\t{cycles_count}\t{e}')
+
+                g.add_edges_from(e)
+
+            if stop:
+                break
 
 
 
