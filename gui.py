@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
         self.actionExit.triggered.connect(qApp.quit)
         self.actionLoadFTGraph.triggered.connect(self.loadFTGraph)
         self.actionAbout.triggered.connect(self.about)
+        self.actionWiki.triggered.connect(self.openWiki)
 
         self.treeView.customContextMenuRequested.connect(self.openMenu)
         #self.treeView.setModel(CustomModel(node))
@@ -153,6 +154,10 @@ class MainWindow(QMainWindow):
     def about(self):
         import core
         QMessageBox.about(self, 'About', core.info())
+
+    def openWiki(self):
+        import webbrowser
+        webbrowser.open('https://github.com/HexM0nk/RiskSpec-Loops-Analyzer/wiki', new=2)
 
 class OpenModelDialog(QDialog):
 
