@@ -87,7 +87,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="10,0">
         <item>
-         <widget class="QLineEdit" name="modelfilepath">
+         <widget class="QLineEdit" name="modelFilePath">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -97,7 +97,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="openFileModel">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -262,7 +262,7 @@
   <connection>
    <sender>loadFromFile</sender>
    <signal>toggled(bool)</signal>
-   <receiver>modelfilepath</receiver>
+   <receiver>modelFilePath</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -278,7 +278,7 @@
   <connection>
    <sender>loadFromFile</sender>
    <signal>toggled(bool)</signal>
-   <receiver>pushButton</receiver>
+   <receiver>openFileModel</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">

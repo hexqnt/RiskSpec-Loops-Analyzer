@@ -4,7 +4,13 @@
 SELECT DISTINCT
 FE.ID AS Node1,   --функциональное событие
 FT.ID AS Node2,   --дерево отказов
-'FE-FT' AS TYPE   --тип связи
+'FE-FT' AS TYPE,   --тип связи
+case Gates.Symbol
+	when 100 then 'or'
+	when 200 then 'and'
+	when 300 then 'k/n'
+	when 400 then 'nor'
+end as Gate
 FROM EVENTS AS FE
 JOIN FEInputs ON FEInputs.FENum=FE.Num AND FEInputs.FEType=FE."Type"
 JOIN EVENTS AS Gates ON Gates.Num = FEInputs.InputNum AND Gates.type = FEInputs.InputType
@@ -18,11 +24,17 @@ UNION
 SELECT DISTINCT
 FT.ID AS Node1,
 rFT.ID AS Node2,
-'FT-FT' AS TYPE
-FROM FT
-JOIN FTNodes ON FTNodes.FTNum = FT.Num
-JOIN EVENTS ON Events.Num = FTNodes.RecNum AND Events.Type = FTNodes.RecType
-JOIN FTNodes AS rFTNodes ON rFTNodes.RecNum = Events.Num AND rFTNodes.RecType = Events.Type
+'FT-FT' AS TYPE,
+case Gates.Symbol
+	when 100 then 'or'
+	when 200 then 'and'
+	when 300 then 'k/n'
+	when 400 then 'nor'
+end as Gate
+FROM FT	-- Верхнее дерево
+JOIN FTNodes ON FTNodes.FTNum = FT.Num		-- Отцовские нодыНоды верзнего дерева, 
+JOIN EVENTS AS Gates ON Gates.Num = FTNodes.RecNum AND Gates.Type = FTNodes.RecType		
+JOIN FTNodes AS rFTNodes ON rFTNodes.RecNum = Gates.Num AND rFTNodes.RecType = Gates.Type
 JOIN FT AS rFT ON rFT.Num = rFTNodes.FTNum
 WHERE
 rFTNodes.FatherGateNum = 0 AND rFTNodes.RecType != 21 AND rFTNodes.RecType = 6 AND

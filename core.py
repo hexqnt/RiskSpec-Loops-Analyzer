@@ -10,6 +10,18 @@ import gui
 
 from itertools import count
 import defines
+
+version = [0, 1]
+
+def info():
+    verstr = '.'.join(map(str, version))
+    infostr = f'RiskSpec Loops Analyzer v{verstr}, GPLv3.\n' + \
+          f'Python {python_version()}\n' + \
+          f'Pandas {pd.__version__}\n' + \
+          f'NetworkX {nx.__version__}\n' + \
+          f'PyQt {gui.PYQT_VERSION_STR}'
+    return infostr
+
 # Graph numbering counter for plotting
 iid = count()
 
@@ -26,8 +38,9 @@ def rem(G):
 
 
 def graph_plot(g, cmap=False):
+    import math
     plt.figure(next(iid))
-    pos = nx.spring_layout(g, k=0.5)
+    pos = nx.spring_layout(g, k = 5/math.sqrt(g.order()))
     if cmap:
         cn = [g.nodes[n]['color'] for n in g.nodes]
         # cn = nx.get_node_attributes(g, 'color')
@@ -52,7 +65,12 @@ class CustomNode(object):
         self._parent = None
         self._row = 0
 
+
+
+
     def initChild(self):
+        if self._data is None:
+            return
         weakly_nodes_list = list(filter(lambda x: len(x) > 1,
                                         nx.weakly_connected_components(self._data)))
         weakly_nodes_list.sort(key=lambda x: len(x), reverse=True)
@@ -108,6 +126,8 @@ class CustomNode(object):
         if len(self._data.nodes) > defines.max_node_loops_calc:
             return None
         return len(list(nx.simple_cycles(self._data)))
+
+
 
 
 
@@ -233,6 +253,12 @@ class StronglyNode(CustomNode):
             if stop:
                 break
 
+def loadGraph(params):
+    import pyodbc
+    with pyodbc.connect(params) as cnxn:
+        df = pd.read_sql(gui.sql.getFTGraph, cnxn)
+        G = nx.from_pandas_edgelist(df=df, source='Node1', target='Node2', create_using=nx.DiGraph())
+    return CustomNode(G,'g')
 
 
 def load_graph():
@@ -245,19 +271,20 @@ def load_graph():
 
 
 def main():
-    print('RiskSpec Loops Analyzer\n',
-          f'Python {python_version()}\n',
-          f'Pandas {pd.__version__}\n',
-          f'NetworkX {nx.__version__}\n',
-          f'PyQt {gui.PYQT_VERSION_STR}')
+    print(info())
     gui.sql.init_sql_queries()
-    G = load_graph()
+    #G = load_graph()
+    G=None
     node = CustomNode(G, 'g')
 
     app = gui.QApplication(sys.argv)
     window = gui.MainWindow(node)
     window.show()
     sys.exit(app.exec_())
+
+class dd:
+    def ff(self):
+        print('ff')
 
 
 if __name__ == '__main__':

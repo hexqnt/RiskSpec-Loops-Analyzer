@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QAction, QMenu, qApp, QFileDialog, QWidget,\
-    QComboBox, QDialog, QLabel, QDesktopWidget
+    QComboBox, QDialog, QLabel, QDesktopWidget, QMessageBox
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt5.Qt import PYQT_VERSION_STR, QColor
 import typing
@@ -95,9 +95,11 @@ class MainWindow(QMainWindow):
 
         self.actionOpen.triggered.connect(self.openModelDialog)
         self.actionExit.triggered.connect(qApp.quit)
+        self.actionLoadFTGraph.triggered.connect(self.loadFTGraph)
+        self.actionAbout.triggered.connect(self.about)
 
         self.treeView.customContextMenuRequested.connect(self.openMenu)
-        self.treeView.setModel(CustomModel(node))
+        #self.treeView.setModel(CustomModel(node))
 
 
     def openMenu(self, position):
@@ -105,36 +107,52 @@ class MainWindow(QMainWindow):
         if not index.isValid():
             return
 
-        plotAction = QAction('Plot', self)
-        plotAction.setStatusTip('Plot graph in Matplotlib')
-        plotAction.triggered.connect(index.internalPointer().plot)
 
-        pcPlotAction = QAction('Path contraction plot', self)
-        pcPlotAction.setStatusTip('Plot graph in Matplotlib with path contraction')
-        pcPlotAction.triggered.connect(index.internalPointer().pcplot)
-
-        simpleCuclesAction = QAction('Simple cycles', self)
-        simpleCuclesAction.setStatusTip('Print simple cycles of graph')
-        simpleCuclesAction.triggered.connect(index.internalPointer().simple_cycles)
-
-        loopBreakSearchAction = QAction('Loop break search', self)
-        loopBreakSearchAction.setStatusTip('Search for places of breaking logical loops in a graph')
-        loopBreakSearchAction.triggered.connect(index.internalPointer().av)
-
-
+        pointer = index.internalPointer()
+        pdir = dir(pointer)
         menu = QMenu()
-        menu.addAction(plotAction)
-        menu.addAction(pcPlotAction)
-        menu.addAction(simpleCuclesAction)
-        menu.addAction(loopBreakSearchAction)
+
+        if 'plot' in pdir:
+            plotAction = QAction('Plot', self)
+            plotAction.setStatusTip('Plot graph in Matplotlib')
+            plotAction.triggered.connect(pointer.plot)
+            menu.addAction(plotAction)
+
+        if 'pcplot' in pdir:
+            pcPlotAction = QAction('Path contraction plot', self)
+            pcPlotAction.setStatusTip('Plot graph in Matplotlib with path contraction')
+            pcPlotAction.triggered.connect(pointer.pcplot)
+            menu.addAction(pcPlotAction)
+
+        if 'simple_cycles' in pdir:
+            simpleCuclesAction = QAction('Simple cycles', self)
+            simpleCuclesAction.setStatusTip('Print simple cycles of graph')
+            simpleCuclesAction.triggered.connect(pointer.simple_cycles)
+            menu.addAction(simpleCuclesAction)
+
+        if 'av' in pdir:
+            loopBreakSearchAction = QAction('Loop break search', self)
+            loopBreakSearchAction.setStatusTip('Search for places of breaking logical loops in a graph')
+            loopBreakSearchAction.triggered.connect(pointer.av)
+            menu.addAction(loopBreakSearchAction)
 
         menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
     def openModelDialog(self):
         e = OpenModelDialog(self)
-        e.exec_()
-        #self.geometry().center()
+        resultCode = e.exec()
+        if resultCode == 1:
+            self.sqlparams = e.connetionString()
+        else:
+            print('None code')
 
+    def loadFTGraph(self):
+        import core
+        self.treeView.setModel(CustomModel(core.loadGraph(self.sqlparams)))
+
+    def about(self):
+        import core
+        QMessageBox.about(self, 'About', core.info())
 
 class OpenModelDialog(QDialog):
 
@@ -150,15 +168,46 @@ class OpenModelDialog(QDialog):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         self.updateModelList.clicked.connect(self.getAvalibleModels)
+        #self.Accepted.connect
+        self.openFileModel.clicked.connect(self.openModelFile)
 
-    def getAvalibleModels(self):
-        dbname = 'master'
-        ip ='127.0.0.1'
-        port = 1433
+    def openModelFile(self):
+        fname = QFileDialog.getOpenFileName(self, 'Open model file', filter="RPP files (*.RPP);;All files (*.*)")[0]
+        self.modelFilePath.setText(fname)
+        return fname
+
+    def deatach_model(self):
+        #EXEC
+        #master.dbo.sp_detach_db @ dbname = N
+        #'TestDB'
+        print('deatach')
+
+    def attach_model(self):
+        name = 'dd'
+        path = self.openModelFile()
+        log_path = 'D:\PSA Models\dd'
+        sql_str = f"USE[master]\nGO\nEXEC sp_attach_db @ dbname = N'{name}',\n" + \
+                  f"@filename1 = '{path}',\n" + \
+                  f"@filename2 = '{log_path}';"
+
+
+        import pyodbc
+        params = self.getParams()
+        with pyodbc.connect(params) as cnxn:
+            with cnxn.cursor() as cursor:
+                cursor.execute(sql_str)
+                rows = cursor.fetchall()
+                if len(rows) == 0:
+                    sys.exit("Нет активных моделей!")
+
+        return sql_str
+
+    def getParams(self, dbname='master', ip ='127.0.0.1', port=1433):
         uid = self.uid.text()
         pwd = self.pwd.text()
         serverName = self.serverName.currentText()
 
+        params = None
         # Создаем строку подключенрия со спец. символами
         if sys.platform == 'linux':
             # Удалённое подключение для Linux через FreeTDS и unixODBC
@@ -167,23 +216,32 @@ class OpenModelDialog(QDialog):
         elif sys.platform == 'win32':
             # Локальное подключение для Windows со стандартным драйвером
             params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
-        else:
-            return None
+
+        return params
+
+
+    def getAvalibleModels(self):
 
         import pyodbc
         with pyodbc.connect(params) as cnxn:
             with cnxn.cursor() as cursor:
-                cursor.execute(sql)
-                rows = cursor.fetchall(sql.getAvailableDB)
+                cursor.execute(sql.getAvailableDB)
+                rows = cursor.fetchall()
                 if len(rows) == 0:
                     sys.exit("Нет активных моделей!")
 
                 a = [r[0] for r in rows]
                 self.models.addItems(a)
 
+
+
+
     def connetionString(self):
 
-        dbname = models.currentText()
+
+        dbname = self.models.currentText()
+
+        #"Data Source =.\SQLEXPRESS; AttachDbFilename = " + dbPath + "; Integrated Security = True; Connect Timeout = 30; User Instance = True'
         ip ='127.0.0.1'
         port = 1433
         uid = self.uid.text()
@@ -197,6 +255,10 @@ class OpenModelDialog(QDialog):
         elif sys.platform == 'win32':
             # Локальное подключение для Windows со стандартным драйвером
             params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
+            if False:
+                path = 'D:\PSA Models\HNPP_PSA_200629.RPP'
+                params = f'DRIVER={{SQL Server}};SERVER={serverName};Trusted_Connection=yes;AttachDbFileName={path}'
+
         else:
             return None
 
