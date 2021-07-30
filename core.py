@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -13,14 +12,16 @@ import defines
 
 version = [0, 1]
 
+
 def info():
     verstr = '.'.join(map(str, version))
     infostr = f'RiskSpec Loops Analyzer v{verstr}, GPLv3.\n' + \
-          f'Python {python_version()}\n' + \
-          f'Pandas {pd.__version__}\n' + \
-          f'NetworkX {nx.__version__}\n' + \
-          f'PyQt {gui.PYQT_VERSION_STR}'
+              f'Python {python_version()}\n' + \
+              f'Pandas {pd.__version__}\n' + \
+              f'NetworkX {nx.__version__}\n' + \
+              f'PyQt {gui.PYQT_VERSION_STR}'
     return infostr
+
 
 # Graph numbering counter for plotting
 iid = count()
@@ -40,7 +41,7 @@ def rem(G):
 def graph_plot(g, cmap=False):
     import math
     plt.figure(next(iid))
-    pos = nx.spring_layout(g, k = 5/math.sqrt(g.order()))
+    pos = nx.spring_layout(g, k=5 / math.sqrt(g.order()))
     if cmap:
         cn = [g.nodes[n]['color'] for n in g.nodes]
         # cn = nx.get_node_attributes(g, 'color')
@@ -50,16 +51,10 @@ def graph_plot(g, cmap=False):
         nx.draw(g, pos=pos, alpha=0.6, with_labels=True)
     plt.show()
 
-class DummyNode(object):
 
-
-
-
-class StronglyOp(DummyNode):
-
-class WeaklyOp(DummyNode):
-
-
+# class DummyNode(object):
+# class StronglyOp(DummyNode):
+# class WeaklyOp(DummyNode):
 
 
 class CustomNode(object):
@@ -75,9 +70,6 @@ class CustomNode(object):
         self._columncount = 3
         self._parent = None
         self._row = 0
-
-
-
 
     def initChild(self):
         if self._data is None:
@@ -98,7 +90,7 @@ class CustomNode(object):
             return self._text
         elif column == 1:
             return len(self._data.nodes)
-        elif column ==2:
+        elif column == 2:
             return self.loops_count()
 
     def columnCount(self):
@@ -125,7 +117,8 @@ class CustomNode(object):
         graph_plot(g)
 
     def simple_cycles(self):
-        saveFile, filter = gui.QFileDialog.getSaveFileName(caption="Specify a file to save loops", filter="Text files (*.txt);;All files (*.*)")
+        saveFile, filter = gui.QFileDialog.getSaveFileName(caption="Specify a file to save loops",
+                                                           filter="Text files (*.txt);;All files (*.*)")
         if saveFile:
             with open(f'{saveFile}.txt', 'w') as file:
                 cycles = nx.simple_cycles(self._data)
@@ -137,9 +130,6 @@ class CustomNode(object):
         if len(self._data.nodes) > defines.max_node_loops_calc:
             return None
         return len(list(nx.simple_cycles(self._data)))
-
-
-
 
 
 class WeaklyNode(CustomNode):
@@ -192,7 +182,6 @@ class StronglyNode(CustomNode):
     def plot(self):
         graph_plot(self._data, cmap=plt.cm.get_cmap('Set1'))
 
-
     def test(self, g, cnodes, dn, test_edges, rem_edge=None):
         accepted_edges = []
         import time
@@ -210,7 +199,6 @@ class StronglyNode(CustomNode):
                     break
             print(time.time(), '\t', 'desc')
             if test:
-
                 print(time.time(), '\t', 'cycles')
                 cycles_count = len(list(nx.simple_cycles(g)))
                 accepted_edges.append(edge)
@@ -218,33 +206,29 @@ class StronglyNode(CustomNode):
 
             g.add_edge(edge[0], edge[1])
 
+        # for edge in accepted_edges:
+        # g.remove_edge(edge[0], edge[1])
+        # a = list(filter(lambda x: x!=edge,accepted_edges))
+        # self.test(g,cnodes,dn,a,edge)
+        # g.add_edge(edge[0], edge[1])
 
-        #for edge in accepted_edges:
-            #g.remove_edge(edge[0], edge[1])
-            #a = list(filter(lambda x: x!=edge,accepted_edges))
-            #self.test(g,cnodes,dn,a,edge)
-            #g.add_edge(edge[0], edge[1])
-
-
-        return  accepted_edges
-
+        return accepted_edges
 
     def av(self):
         result = []
         g = self._data
-        orange_nodes = [x for x,y in g.nodes(data=True) if y['color']==1]
-        dnodes= [x for x,y in g.nodes(data=True) if y['color']==2]
+        orange_nodes = [x for x, y in g.nodes(data=True) if y['color'] == 1]
+        dnodes = [x for x, y in g.nodes(data=True) if y['color'] == 2]
         blue_nodes = set(dnodes)
-        #print(f'{cnodes}\n{dnodes}')
+        # print(f'{cnodes}\n{dnodes}')
         edges = list(g.edges())
-        edges = self.test(g,orange_nodes,blue_nodes,edges)
+        edges = self.test(g, orange_nodes, blue_nodes, edges)
 
-        import time
         from itertools import combinations
 
         for level in range(2, len(edges)):
             stop = True
-            edges2 = combinations(edges,level)
+            edges2 = combinations(edges, level)
             for i, e in enumerate(edges2):
                 g.remove_edges_from(e)
 
@@ -264,12 +248,13 @@ class StronglyNode(CustomNode):
             if stop:
                 break
 
+
 def loadGraph(params):
     import pyodbc
     with pyodbc.connect(params) as cnxn:
         df = pd.read_sql(gui.sql.getFTGraph, cnxn)
         G = nx.from_pandas_edgelist(df=df, source='Node1', target='Node2', create_using=nx.DiGraph())
-    return CustomNode(G,'g')
+    return CustomNode(G, 'g')
 
 
 def load_graph():
@@ -279,4 +264,3 @@ def load_graph():
     df = pd.concat([feft, ftft])
     G = nx.from_pandas_edgelist(df=df, source='FT1', target='FT2', create_using=nx.DiGraph())
     return G
-

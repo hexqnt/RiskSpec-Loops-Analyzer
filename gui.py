@@ -164,7 +164,7 @@ class OpenModelDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi('ui/openmodeldialog.ui', self) # Load the .ui file
+        uic.loadUi('ui/OpenModelDialog.ui', self) # Load the .ui file
         self.initUI()
 
     def initUI(self):
@@ -190,7 +190,7 @@ class OpenModelDialog(QDialog):
     def attach_model(self):
         name = 'dd'
         path = self.openModelFile()
-        log_path = 'D:\PSA Models\dd'
+        log_path = 'D:\dd'
         sql_str = f"USE[master]\nGO\nEXEC sp_attach_db @ dbname = N'{name}',\n" + \
                   f"@filename1 = '{path}',\n" + \
                   f"@filename2 = '{log_path}';"
@@ -228,15 +228,15 @@ class OpenModelDialog(QDialog):
     def getAvalibleModels(self):
 
         import pyodbc
+        params = self.getParams()
         with pyodbc.connect(params) as cnxn:
             with cnxn.cursor() as cursor:
                 cursor.execute(sql.getAvailableDB)
                 rows = cursor.fetchall()
-                if len(rows) == 0:
-                    sys.exit("Нет активных моделей!")
 
-                a = [r[0] for r in rows]
-                self.models.addItems(a)
+                if len(rows) > 0:
+                    a = [r[0] for r in rows]
+                    self.models.addItems(a)
 
 
 

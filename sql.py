@@ -9,4 +9,3 @@ def init_sql_queries():
     getFTGraph = read_file('GetFTGraph.sql')
     global getAvailableDB
     getAvailableDB = read_file('GetAvailableDB.sql')
-
