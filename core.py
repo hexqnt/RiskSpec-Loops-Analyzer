@@ -50,6 +50,17 @@ def graph_plot(g, cmap=False):
         nx.draw(g, pos=pos, alpha=0.6, with_labels=True)
     plt.show()
 
+class DummyNode(object):
+
+
+
+
+class StronglyOp(DummyNode):
+
+class WeaklyOp(DummyNode):
+
+
+
 
 class CustomNode(object):
 
@@ -269,23 +280,3 @@ def load_graph():
     G = nx.from_pandas_edgelist(df=df, source='FT1', target='FT2', create_using=nx.DiGraph())
     return G
 
-
-def main():
-    print(info())
-    gui.sql.init_sql_queries()
-    #G = load_graph()
-    G=None
-    node = CustomNode(G, 'g')
-
-    app = gui.QApplication(sys.argv)
-    window = gui.MainWindow(node)
-    window.show()
-    sys.exit(app.exec_())
-
-class dd:
-    def ff(self):
-        print('ff')
-
-
-if __name__ == '__main__':
-    main()
