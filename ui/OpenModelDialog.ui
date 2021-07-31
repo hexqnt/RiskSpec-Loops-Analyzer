@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>389</width>
+    <width>400</width>
     <height>294</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>389</width>
+    <width>400</width>
     <height>294</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>16777215</width>
+    <width>600</width>
     <height>294</height>
    </size>
   </property>
@@ -42,17 +42,17 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,10,1">
-        <item>
-         <widget class="QRadioButton" name="loadFromMemory">
-          <property name="text">
-           <string>Select model:</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
+       <widget class="QRadioButton" name="loadFromMemory">
+        <property name="text">
+         <string>Select model:</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="10,1,0">
         <item>
          <widget class="QComboBox" name="models"/>
         </item>
@@ -70,8 +70,21 @@
             <height>0</height>
            </size>
           </property>
+          <property name="whatsThis">
+           <string>Updating the list of active models</string>
+          </property>
           <property name="text">
-           <string>Update</string>
+           <string>Refresh</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="detachButton">
+          <property name="whatsThis">
+           <string>Unload Model</string>
+          </property>
+          <property name="text">
+           <string>Detach</string>
           </property>
          </widget>
         </item>
@@ -85,7 +98,7 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="10,0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="10,0,0">
         <item>
          <widget class="QLineEdit" name="modelFilePath">
           <property name="enabled">
@@ -113,8 +126,27 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="statusTip">
+           <string>Open file dialog</string>
+          </property>
           <property name="text">
            <string>...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="attachButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>sdf</string>
+          </property>
+          <property name="whatsThis">
+           <string>Load model into SQL server</string>
+          </property>
+          <property name="text">
+           <string>Attach</string>
           </property>
          </widget>
         </item>
@@ -199,6 +231,9 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -218,8 +253,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>257</x>
+     <y>284</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -234,8 +269,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>325</x>
+     <y>284</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -250,12 +285,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>71</x>
-     <y>49</y>
+     <x>90</x>
+     <y>48</y>
     </hint>
     <hint type="destinationlabel">
-     <x>242</x>
-     <y>49</y>
+     <x>232</x>
+     <y>76</y>
     </hint>
    </hints>
   </connection>
@@ -266,12 +301,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>77</y>
+     <x>209</x>
+     <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>171</x>
-     <y>105</y>
+     <x>191</x>
+     <y>130</y>
     </hint>
    </hints>
   </connection>
@@ -282,12 +317,60 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>190</x>
-     <y>77</y>
+     <x>209</x>
+     <y>102</y>
     </hint>
     <hint type="destinationlabel">
-     <x>342</x>
-     <y>105</y>
+     <x>298</x>
+     <y>132</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>loadFromMemory</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>updateModelList</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>295</x>
+     <y>37</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>266</x>
+     <y>64</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>loadFromMemory</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>detachButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>380</x>
+     <y>40</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>346</x>
+     <y>68</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>loadFromFile</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>attachButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>295</x>
+     <y>92</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>123</y>
     </hint>
    </hints>
   </connection>

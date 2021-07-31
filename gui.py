@@ -6,13 +6,13 @@ from PyQt5.Qt import PYQT_VERSION_STR, QColor
 import typing
 import sys
 import sql
-
+import os
 
 class CustomModel(QAbstractItemModel):
     def __init__(self, node):
         QAbstractItemModel.__init__(self)
         self._root = node
-        self._header = ["Graph name", 'Nodes count', 'Loops count']
+        self._header = ["Graph name", 'Nodes', 'Edges', 'Loops']
         print('CustomModel init')
 
     def rowCount(self, parent: QModelIndex = ...) -> int:
@@ -57,7 +57,6 @@ class CustomModel(QAbstractItemModel):
         if role == Qt.EditRole:
             node = index.internalPointer()
             return node
-
         return None
 
     def setData(self, index: QModelIndex, value: typing.Any, role: int = ...) -> bool:
@@ -84,11 +83,10 @@ class CustomModel(QAbstractItemModel):
             return self._header[section]
         return None
 
-
 class MainWindow(QMainWindow):
     def __init__(self, node):
         super().__init__()
-        uic.loadUi('ui/mainwindow.ui', self) # Load the .ui file
+        uic.loadUi('ui/MainWindow.ui', self) # Load the .ui file
         self.initUI(node)
 
     def initUI(self, node):
@@ -101,7 +99,6 @@ class MainWindow(QMainWindow):
 
         self.treeView.customContextMenuRequested.connect(self.openMenu)
         #self.treeView.setModel(CustomModel(node))
-
 
     def openMenu(self, position):
         index = self.treeView.indexAt(position)
@@ -125,6 +122,15 @@ class MainWindow(QMainWindow):
             pcPlotAction.triggered.connect(pointer.pcplot)
             menu.addAction(pcPlotAction)
 
+        if 'condensation_plot' in pdir:
+            condensationPlotAction = QAction('Condensation plot', self)
+            condensationPlotAction.setStatusTip(
+                'Condensation is the graph with each of the strongly connected components contracted into a single node')
+            condensationPlotAction.triggered.connect(pointer.condensation_plot)
+            menu.addAction(condensationPlotAction)
+
+            menu.addSeparator()
+
         if 'simple_cycles' in pdir:
             simpleCuclesAction = QAction('Simple cycles', self)
             simpleCuclesAction.setStatusTip('Print simple cycles of graph')
@@ -136,6 +142,7 @@ class MainWindow(QMainWindow):
             loopBreakSearchAction.setStatusTip('Search for places of breaking logical loops in a graph')
             loopBreakSearchAction.triggered.connect(pointer.av)
             menu.addAction(loopBreakSearchAction)
+
 
         menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -157,7 +164,7 @@ class MainWindow(QMainWindow):
 
     def openWiki(self):
         import webbrowser
-        webbrowser.open('https://github.com/HexM0nk/RiskSpec-Loops-Analyzer/wiki', new=2)
+        webbrowser.open('https://github.com/HexQuant/RiskSpec-Loops-Analyzer/wiki', new=2)
 
 class OpenModelDialog(QDialog):
 
@@ -173,28 +180,68 @@ class OpenModelDialog(QDialog):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         self.updateModelList.clicked.connect(self.getAvalibleModels)
-        #self.Accepted.connect
         self.openFileModel.clicked.connect(self.openModelFile)
+        self.attachButton.clicked.connect(self.attach)
+        self.detachButton.clicked.connect(self.detach)
+
+        self.getAvalibleModels()
 
     def openModelFile(self):
         fname = QFileDialog.getOpenFileName(self, 'Open model file', filter="RPP files (*.RPP);;All files (*.*)")[0]
-        self.modelFilePath.setText(fname)
+        self.modelFilePath.setText(os.path.normpath(fname))
         return fname
 
-    def deatach_model(self):
-        #EXEC
-        #master.dbo.sp_detach_db @ dbname = N
-        #'TestDB'
-        print('deatach')
+    def detach(self):
+        dbname = self.models.currentText()
+
+        import pyodbc
+        params = self.getParams()
+        try:
+            with pyodbc.connect(params) as cnxn:
+                cnxn.autocommit = True
+                with cnxn.cursor() as cursor:
+                    cursor.execute(
+                        f'''
+                        USE [master];
+                        ALTER DATABASE [{dbname}] SET TRUSTWORTHY ON;
+                        EXEC sp_detach_db @dbname={dbname};
+                        ''')
+        except pyodbc.Error as ex:
+            QMessageBox.warning(self, 'pyodbc', ex.args[0])
+        self.getAvalibleModels()
+
+
+    def attach(self):
+
+        path = self.modelFilePath.text()
+        dbname = os.path.basename(path).split('.')[0]
+
+        import pyodbc
+        params = self.getParams()
+        try:
+            with pyodbc.connect(params) as cnxn:
+                cnxn.autocommit = True
+                with cnxn.cursor() as cursor:
+                    cursor.execute(
+                        f'''
+                        USE [master];
+                        EXEC sp_attach_db
+                        @dbname={dbname},
+                        @filename1 = '{path}';
+                        ''')
+        except pyodbc.Error as ex:
+            QMessageBox.warning(self, 'pyodbc', ex.args[0])
+        self.getAvalibleModels()
+        self.loadFromMemory.setChecked(True)
+
 
     def attach_model(self):
         name = 'dd'
         path = self.openModelFile()
         log_path = 'D:\dd'
-        sql_str = f"USE[master]\nGO\nEXEC sp_attach_db @ dbname = N'{name}',\n" + \
-                  f"@filename1 = '{path}',\n" + \
-                  f"@filename2 = '{log_path}';"
-
+        sql_str = f"USE[master]\nGO\nEXEC sp_attach_db @dbname = \"{name}\",\n" + \
+                  f"@filename1 = \"{path}\",\n" + \
+                  f"@filename2 = \"{log_path}\";"
 
         import pyodbc
         params = self.getParams()
@@ -207,7 +254,7 @@ class OpenModelDialog(QDialog):
 
         return sql_str
 
-    def getParams(self, dbname='master', ip ='127.0.0.1', port=1433):
+    def getParams(self, dbname='master', path='', ip='127.0.0.1', port=1433):
         uid = self.uid.text()
         pwd = self.pwd.text()
         serverName = self.serverName.currentText()
@@ -220,7 +267,10 @@ class OpenModelDialog(QDialog):
 
         elif sys.platform == 'win32':
             # Локальное подключение для Windows со стандартным драйвером
-            params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
+            if path == '':
+                params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd};'
+            else:
+                params = f'DRIVER={{SQL Server}};SERVER={serverName};Trusted_Connection=yes;AttachDbFileName={path}'
 
         return params
 
@@ -229,48 +279,18 @@ class OpenModelDialog(QDialog):
 
         import pyodbc
         params = self.getParams()
-        with pyodbc.connect(params) as cnxn:
-            with cnxn.cursor() as cursor:
-                cursor.execute(sql.getAvailableDB)
-                rows = cursor.fetchall()
+        try:
+            with pyodbc.connect(params) as cnxn:
+                with cnxn.cursor() as cursor:
+                    cursor.execute(sql.getAvailableDB)
+                    rows = cursor.fetchall()
 
-                if len(rows) > 0:
-                    a = [r[0] for r in rows]
-                    self.models.addItems(a)
-
-
-
+                    self.models.clear()
+                    if len(rows) > 0:
+                        a = [r[0] for r in rows]
+                        self.models.addItems(a)
+        except pyodbc.Error as ex:
+            QMessageBox.warning(self, 'pyodbc', ex.args[0])
 
     def connetionString(self):
-
-
-        dbname = self.models.currentText()
-
-        #"Data Source =.\SQLEXPRESS; AttachDbFilename = " + dbPath + "; Integrated Security = True; Connect Timeout = 30; User Instance = True'
-        ip ='127.0.0.1'
-        port = 1433
-        uid = self.uid.text()
-        pwd = self.pwd.text()
-        serverName = self.serverName.currentText()
-
-        if sys.platform == 'linux':
-            # Удалённое подключение для Linux через FreeTDS и unixODBC
-            params = f'DRIVER=FreeTDS;SERVER={ip};PORT={port};DATABASE={dbname};UID={uid};Pwd={pwd};TDS_Version=8.0;'
-
-        elif sys.platform == 'win32':
-            # Локальное подключение для Windows со стандартным драйвером
-            params = f'DRIVER={{SQL Server}};SERVER={serverName};DATABASE={dbname};UID={uid};Pwd={pwd}'
-            if False:
-                path = 'D:\PSA Models\HNPP_PSA_200629.RPP'
-                params = f'DRIVER={{SQL Server}};SERVER={serverName};Trusted_Connection=yes;AttachDbFileName={path}'
-
-        else:
-            return None
-
-        return params
-
-
-
-
-
-
+        return self.getParams(dbname=self.models.currentText())

@@ -4,6 +4,7 @@
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib
 from platform import python_version
 import gui
 
@@ -67,7 +68,7 @@ class CustomNode(object):
         self._children = []
         self.initChild()
 
-        self._columncount = 3
+        self._columncount = 4
         self._parent = None
         self._row = 0
 
@@ -91,6 +92,8 @@ class CustomNode(object):
         elif column == 1:
             return len(self._data.nodes)
         elif column == 2:
+            return len(self._data.edges)
+        elif column == 3:
             return self.loops_count()
 
     def columnCount(self):
@@ -127,10 +130,13 @@ class CustomNode(object):
                     file.write(f'{i}\t{str}\n')
 
     def loops_count(self):
-        if len(self._data.nodes) > defines.max_node_loops_calc:
-            return None
+        if len(self._data.nodes) > defines.max_node_loops_calc and \
+                len(self._data.edges) > defines.max_edge_loops_calc:
+            return 'nodes limit'
         return len(list(nx.simple_cycles(self._data)))
 
+    def condensation_plot(self):
+       graph_plot(nx.condensation(self._data))
 
 class WeaklyNode(CustomNode):
 
