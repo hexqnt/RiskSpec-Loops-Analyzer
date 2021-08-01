@@ -1,26 +1,27 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import pandas as pd
-import networkx as nx
-import matplotlib.pyplot as plt
-import matplotlib
+from itertools import count, combinations
+from random import sample
 from platform import python_version
-import gui
 
-from itertools import count
+import matplotlib.pyplot as plt
+import networkx as nx
+import pandas as pd
+
 import defines
+import gui
 
 version = [0, 1]
 
-
 def info():
     verstr = '.'.join(map(str, version))
+    from PyQt5.Qt import QT_VERSION_STR
     infostr = f'RiskSpec Loops Analyzer v{verstr}, GPLv3.\n' + \
               f'Python {python_version()}\n' + \
               f'Pandas {pd.__version__}\n' + \
               f'NetworkX {nx.__version__}\n' + \
-              f'PyQt {gui.PYQT_VERSION_STR}'
+              f'PyQt {QT_VERSION_STR}'
     return infostr
 
 
@@ -136,7 +137,8 @@ class CustomNode(object):
         return len(list(nx.simple_cycles(self._data)))
 
     def condensation_plot(self):
-       graph_plot(nx.condensation(self._data))
+        graph_plot(nx.condensation(self._data))
+
 
 class WeaklyNode(CustomNode):
 
@@ -188,72 +190,87 @@ class StronglyNode(CustomNode):
     def plot(self):
         graph_plot(self._data, cmap=plt.cm.get_cmap('Set1'))
 
-    def test(self, g, cnodes, dn, test_edges, rem_edge=None):
+    def test(self, g, cnodes, dn, test_edges):
         accepted_edges = []
-        import time
-        print(time.time(), '\t', 'start')
-        for edge in test_edges:
-
-            g.remove_edge(edge[0], edge[1])
-
-            test = True
+        for i, edge in enumerate(test_edges):
+            g.remove_edge(*edge)
+            test_pass = True
             for node in cnodes:
                 d = nx.algorithms.descendants(g, node)
-
-                test = dn == d
-                if not test:
+                test_pass = (dn == d)
+                if not test_pass:
                     break
-            print(time.time(), '\t', 'desc')
-            if test:
-                print(time.time(), '\t', 'cycles')
-                cycles_count = len(list(nx.simple_cycles(g)))
+            if test_pass:
                 accepted_edges.append(edge)
-                print(edge)
-
-            g.add_edge(edge[0], edge[1])
-
-        # for edge in accepted_edges:
-        # g.remove_edge(edge[0], edge[1])
-        # a = list(filter(lambda x: x!=edge,accepted_edges))
-        # self.test(g,cnodes,dn,a,edge)
-        # g.add_edge(edge[0], edge[1])
-
+                print(f'{i}/{len(test_edges)}\t{edge}')
+            g.add_edge(*edge)
         return accepted_edges
 
+    def set_comb(self, edges, combset=None):
+        if combset != None:
+            nl = set()
+            for e in edges:
+                for comb in combset:
+                    s = [el for el in comb]
+                    s.append(e)
+                    nl.add(frozenset(s))
+            return nl
+        return {frozenset(e) for e in edges}
+
+    def init_comb(self, edges):
+        return {frozenset(comb) for comb in list(combinations(edges, 2))}
+
     def av(self):
-        result = []
+        max_level = 10
         g = self._data
+        # Nodes from which the graph is entered
         orange_nodes = [x for x, y in g.nodes(data=True) if y['color'] == 1]
-        dnodes = [x for x, y in g.nodes(data=True) if y['color'] == 2]
-        blue_nodes = set(dnodes)
-        # print(f'{cnodes}\n{dnodes}')
+        # Nodes to which reachability is checked
+        blue_nodes = frozenset([x for x, y in g.nodes(data=True) if y['color'] == 2])
+        # Edges whose unit deletion will not lead to a break in the graph connectivity
         edges = list(g.edges())
+        if len(edges) > 50:
+            edges = sample(edges, 20)
         edges = self.test(g, orange_nodes, blue_nodes, edges)
+        old_set = set([frozenset([e]) for e in edges])
+        for level in range(2, max_level):
+            print(f'Start of level {level}/{max_level}.')
+            iter_count = len(old_set)*len(edges)
+            i=0
+            new_set = set()
+            temp_edges = set()
+            for comb in old_set:
+                g.remove_edges_from(comb)
+                for e in edges:
+                    i = i + 1
+                    if e not in comb:
+                        g.remove_edge(*e)
+                        # Test
+                        test_pass = True
+                        for node in orange_nodes:
+                            d = nx.algorithms.descendants(g, node)
+                            test_pass = (blue_nodes == d)
+                            if not test_pass:
+                                break
+                        if test_pass:
+                            s = [el for el in comb]
+                            s.append(e)
+                            new_set.add(frozenset(s))
+                            print(f'{i}/{iter_count}\t{s}')
+                            temp_edges.add(e)
+                        g.add_edge(*e)
 
-        from itertools import combinations
-
-        for level in range(2, len(edges)):
-            stop = True
-            edges2 = combinations(edges, level)
-            for i, e in enumerate(edges2):
-                g.remove_edges_from(e)
-
-                test = True
-                for node in orange_nodes:
-                    d = nx.algorithms.descendants(g, node)
-                    test = blue_nodes == d
-                    if not test:
-                        break
-                if test:
-                    stop = False
-                    cycles_count = len(list(nx.simple_cycles(g)))
-                    print(f'{i}\t{level}\t{cycles_count}\t{e}')
-
-                g.add_edges_from(e)
-
-            if stop:
-                break
-
+                g.add_edges_from(comb)
+            if len(new_set)>0:
+                old_set = new_set
+            else:
+                print(f'End run. No edge combination on {level}.')
+                return
+            print(f'End of level {level}/{max_level}, found {len(new_set)} edge combinations. '
+                  f'{len(temp_edges)} of {len(edges)} edges left for the test.')
+            edges = temp_edges
+        print(f'End run. Maximum search nesting level {max_level} reached!')
+        return
 
 def loadGraph(params):
     import pyodbc

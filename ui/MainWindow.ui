@@ -1,160 +1,161 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>560</width>
-    <height>469</height>
-   </rect>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>560</width>
-    <height>469</height>
-   </size>
-  </property>
-  <property name="windowTitle">
-   <string>RiskSpec Loops Analyzer</string>
-  </property>
-  <property name="layoutDirection">
-   <enum>Qt::LeftToRight</enum>
-  </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
-    <item>
-     <widget class="QTreeView" name="treeView">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="contextMenuPolicy">
-       <enum>Qt::CustomContextMenu</enum>
-      </property>
-      <property name="layoutDirection">
-       <enum>Qt::LeftToRight</enum>
-      </property>
-      <property name="alternatingRowColors">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>560</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>&amp;File</string>
-    </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionOpenFormFile"/>
-    <addaction name="actionClose"/>
-    <addaction name="separator"/>
-    <addaction name="actionExit"/>
-    <addaction name="separator"/>
-   </widget>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>&amp;Help</string>
-    </property>
-    <addaction name="actionWiki"/>
-    <addaction name="actionAbout"/>
-   </widget>
-   <widget class="QMenu" name="menuCommands">
-    <property name="title">
-     <string>&amp;Commands</string>
-    </property>
-    <addaction name="actionLoadFTGraph"/>
-    <addaction name="actionSwapDiamond"/>
-   </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuCommands"/>
-   <addaction name="menuHelp"/>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionOpen">
-   <property name="text">
-    <string>&amp;Open model...</string>
-   </property>
-   <property name="statusTip">
-    <string>Open RiskSpectrum DB model</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionExit">
-   <property name="text">
-    <string>&amp;Exit</string>
-   </property>
-   <property name="statusTip">
-    <string>Exit application</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Q</string>
-   </property>
-  </action>
-  <action name="actionLoadFTGraph">
-   <property name="text">
-    <string>Load FT graph</string>
-   </property>
-   <property name="statusTip">
-    <string>Load Fault Tree graph</string>
-   </property>
-   <property name="whatsThis">
-    <string/>
-   </property>
-  </action>
-  <action name="actionAbout">
-   <property name="text">
-    <string>About...</string>
-   </property>
-  </action>
-  <action name="actionWiki">
-   <property name="text">
-    <string>Wiki</string>
-   </property>
-  </action>
-  <action name="actionClose">
-   <property name="text">
-    <string>&amp;Close</string>
-   </property>
-   <property name="statusTip">
-    <string>Close current model</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+W</string>
-   </property>
-  </action>
-  <action name="actionOpenFormFile">
-   <property name="text">
-    <string>Open form file ..</string>
-   </property>
-   <property name="statusTip">
-    <string>Open fault tree graph form file</string>
-   </property>
-  </action>
-  <action name="actionSwapDiamond">
-   <property name="text">
-    <string>Swap diamond</string>
-   </property>
-   <property name="statusTip">
-    <string>Changing a diamond node to a transfer to an existing fault tree in the RiskSpectrum PSA model</string>
-   </property>
-  </action>
- </widget>
- <resources/>
- <connections/>
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>560</width>
+                <height>469</height>
+            </rect>
+        </property>
+        <property name="minimumSize">
+            <size>
+                <width>560</width>
+                <height>469</height>
+            </size>
+        </property>
+        <property name="windowTitle">
+            <string>RiskSpec Loops Analyzer</string>
+        </property>
+        <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+        </property>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
+                <item>
+                    <widget class="QTreeView" name="treeView">
+                        <property name="sizePolicy">
+                            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="contextMenuPolicy">
+                            <enum>Qt::CustomContextMenu</enum>
+                        </property>
+                        <property name="layoutDirection">
+                            <enum>Qt::LeftToRight</enum>
+                        </property>
+                        <property name="alternatingRowColors">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+        <widget class="QMenuBar" name="menubar">
+            <property name="geometry">
+                <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>560</width>
+                    <height>19</height>
+                </rect>
+            </property>
+            <widget class="QMenu" name="menuFile">
+                <property name="title">
+                    <string>&amp;File</string>
+                </property>
+                <addaction name="actionOpen"/>
+                <addaction name="actionOpenFormFile"/>
+                <addaction name="actionClose"/>
+                <addaction name="separator"/>
+                <addaction name="actionExit"/>
+                <addaction name="separator"/>
+            </widget>
+            <widget class="QMenu" name="menuHelp">
+                <property name="title">
+                    <string>&amp;Help</string>
+                </property>
+                <addaction name="actionWiki"/>
+                <addaction name="actionAbout"/>
+            </widget>
+            <widget class="QMenu" name="menuCommands">
+                <property name="title">
+                    <string>&amp;Commands</string>
+                </property>
+                <addaction name="actionLoadFTGraph"/>
+                <addaction name="actionSwapDiamond"/>
+            </widget>
+            <addaction name="menuFile"/>
+            <addaction name="menuCommands"/>
+            <addaction name="menuHelp"/>
+        </widget>
+        <widget class="QStatusBar" name="statusbar"/>
+        <action name="actionOpen">
+            <property name="text">
+                <string>&amp;Open model...</string>
+            </property>
+            <property name="statusTip">
+                <string>Open RiskSpectrum DB model</string>
+            </property>
+            <property name="shortcut">
+                <string>Ctrl+O</string>
+            </property>
+        </action>
+        <action name="actionExit">
+            <property name="text">
+                <string>&amp;Exit</string>
+            </property>
+            <property name="statusTip">
+                <string>Exit application</string>
+            </property>
+            <property name="shortcut">
+                <string>Ctrl+Q</string>
+            </property>
+        </action>
+        <action name="actionLoadFTGraph">
+            <property name="text">
+                <string>Load FT graph</string>
+            </property>
+            <property name="statusTip">
+                <string>Load Fault Tree graph</string>
+            </property>
+            <property name="whatsThis">
+                <string/>
+            </property>
+        </action>
+        <action name="actionAbout">
+            <property name="text">
+                <string>About...</string>
+            </property>
+        </action>
+        <action name="actionWiki">
+            <property name="text">
+                <string>Wiki</string>
+            </property>
+        </action>
+        <action name="actionClose">
+            <property name="text">
+                <string>&amp;Close</string>
+            </property>
+            <property name="statusTip">
+                <string>Close current model</string>
+            </property>
+            <property name="shortcut">
+                <string>Ctrl+W</string>
+            </property>
+        </action>
+        <action name="actionOpenFormFile">
+            <property name="text">
+                <string>Open form file ..</string>
+            </property>
+            <property name="statusTip">
+                <string>Open fault tree graph form file</string>
+            </property>
+        </action>
+        <action name="actionSwapDiamond">
+            <property name="text">
+                <string>Swap diamond</string>
+            </property>
+            <property name="statusTip">
+                <string>Changing a diamond node to a transfer to an existing fault tree in the RiskSpectrum PSA model
+                </string>
+            </property>
+        </action>
+    </widget>
+    <resources/>
+    <connections/>
 </ui>

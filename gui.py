@@ -1,12 +1,13 @@
-from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeView, QAction, QMenu, qApp, QFileDialog, QWidget,\
-    QComboBox, QDialog, QLabel, QDesktopWidget, QMessageBox
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt5.Qt import PYQT_VERSION_STR, QColor
-import typing
-import sys
-import sql
 import os
+import sys
+import typing
+
+from PyQt5 import uic
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt5.QtWidgets import QMainWindow, QAction, QMenu, qApp, QFileDialog, QDialog, QMessageBox
+
+import sql
+
 
 class CustomModel(QAbstractItemModel):
     def __init__(self, node):
@@ -83,10 +84,11 @@ class CustomModel(QAbstractItemModel):
             return self._header[section]
         return None
 
+
 class MainWindow(QMainWindow):
     def __init__(self, node):
         super().__init__()
-        uic.loadUi('ui/MainWindow.ui', self) # Load the .ui file
+        uic.loadUi('ui/MainWindow.ui', self)  # Load the .ui file
         self.initUI(node)
 
     def initUI(self, node):
@@ -98,13 +100,12 @@ class MainWindow(QMainWindow):
         self.actionWiki.triggered.connect(self.openWiki)
 
         self.treeView.customContextMenuRequested.connect(self.openMenu)
-        #self.treeView.setModel(CustomModel(node))
+        # self.treeView.setModel(CustomModel(node))
 
     def openMenu(self, position):
         index = self.treeView.indexAt(position)
         if not index.isValid():
             return
-
 
         pointer = index.internalPointer()
         pdir = dir(pointer)
@@ -143,7 +144,6 @@ class MainWindow(QMainWindow):
             loopBreakSearchAction.triggered.connect(pointer.av)
             menu.addAction(loopBreakSearchAction)
 
-
         menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
     def openModelDialog(self):
@@ -166,12 +166,13 @@ class MainWindow(QMainWindow):
         import webbrowser
         webbrowser.open('https://github.com/HexQuant/RiskSpec-Loops-Analyzer/wiki', new=2)
 
+
 class OpenModelDialog(QDialog):
 
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi('ui/OpenModelDialog.ui', self) # Load the .ui file
+        uic.loadUi('ui/OpenModelDialog.ui', self)  # Load the .ui file
         self.initUI()
 
     def initUI(self):
@@ -210,7 +211,6 @@ class OpenModelDialog(QDialog):
             QMessageBox.warning(self, 'pyodbc', ex.args[0])
         self.getAvalibleModels()
 
-
     def attach(self):
 
         path = self.modelFilePath.text()
@@ -233,7 +233,6 @@ class OpenModelDialog(QDialog):
             QMessageBox.warning(self, 'pyodbc', ex.args[0])
         self.getAvalibleModels()
         self.loadFromMemory.setChecked(True)
-
 
     def attach_model(self):
         name = 'dd'
@@ -274,9 +273,7 @@ class OpenModelDialog(QDialog):
 
         return params
 
-
     def getAvalibleModels(self):
-
         import pyodbc
         params = self.getParams()
         try:
