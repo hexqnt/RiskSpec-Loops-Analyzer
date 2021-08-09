@@ -262,7 +262,7 @@ class OpenModelDialog(QDialog):
         # Создаем строку подключенрия со спец. символами
         if sys.platform == 'linux':
             # Удалённое подключение для Linux через FreeTDS и unixODBC
-            params = f'DRIVER=FreeTDS;SERVER={ip};PORT={port};DATABASE={dbname};UID={uid};Pwd={pwd};TDS_Version=8.0;'
+            params = f'DRIVER=FreeTDS;SERVER={ip};PORT={port};DATABASE={dbname};uid={uid};Pwd={pwd};TDS_Version=8.0;'
 
         elif sys.platform == 'win32':
             # Локальное подключение для Windows со стандартным драйвером
