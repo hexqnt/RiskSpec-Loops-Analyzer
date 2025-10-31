@@ -1,3 +1,9 @@
+> The repository was moved to read-only mode on October 31, 2025.
+
+The project is no longer supported due to loss of access to the underlying software.
+
+---
+
 [![RiskSpectrum PSA](http://www.riskspectrum.ru/assets/images/risk_spectrum_PSA.JPG)](http://www.riskspectrum.ru/programmnoe-obespechenie/riskspectrum-psa.html)
 
 # RiskSpec Loops Analyzer
